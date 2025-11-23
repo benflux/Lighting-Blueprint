@@ -1,0 +1,314 @@
+blueprint:
+  name: Mode-based Lighting Control
+  description: >
+    Automatically sets brightness and colour temperature when lights turn on,
+    based on a Day / Evening / Night mode helper. Includes manual override
+    and optional lux check.
+  domain: automation
+
+  input:
+    target_lights:
+      name: Lights to control
+      description: >
+        The lights that should be controlled by this automation.
+        When any of these lights turn on, their settings will be adjusted.
+      selector:
+        entity:
+          domain: light
+          multiple: true
+
+    mode_helper:
+      name: Mode helper - Day / Evening / Night
+      description: >
+        Input select that holds the current mode for the house, for example "Day",
+        "Evening", and "Night". The brightness and colour temperature below are
+        applied based on this.
+      selector:
+        entity:
+          domain: input_select
+
+    override_helper:
+      name: Override helper - manual control flag
+      description: >
+        Input boolean used to temporarily ignore light-on events.
+        When this is ON, turning on lights will not change their settings.
+        Note: Unlike the motion blueprint, this blueprint does NOT automatically
+        turn the override off, as there is no "motion off" event to track.
+        You must manage the override state separately or use the button sensor below.
+      selector:
+        entity:
+          domain: input_boolean
+
+    override_button_sensor:
+      name: Override button sensor
+      description: >
+        Entity that represents your button, for example
+        sensor.zencontrol_2_linen_hall_way_on_off.
+        Your integration should set this to "press" (or "hold") when the button is
+        activated, then back to "unknown" shortly after. Each change TO the state
+        value configured below will turn the override helper ON.
+      selector:
+        entity: {}
+
+    override_button_state_value:
+      name: Override button state value that means "press"
+      description: >
+        Sensor STATE that should be treated as a press, for example "press" or "hold".
+        Every time the sensor changes TO this value, the override helper will be set ON.
+      default: "press"
+      selector:
+        text: {}
+
+    # Mode configuration - brightness and colour
+
+    day_brightness:
+      name: Day brightness
+      description: >
+        Brightness percentage used in Day mode.
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+
+    day_color_temp:
+      name: Day colour temperature (K)
+      description: >
+        Colour temperature in Kelvin for Day mode.
+      default: 6500
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          step: 50
+          unit_of_measurement: K
+
+    evening_brightness:
+      name: Evening brightness
+      description: >
+        Brightness percentage used in Evening mode.
+      default: 80
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+
+    evening_color_temp:
+      name: Evening colour temperature (K)
+      description: >
+        Colour temperature in Kelvin for Evening mode.
+      default: 3000
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          step: 50
+          unit_of_measurement: K
+
+    night_brightness:
+      name: Night brightness
+      description: >
+        Brightness percentage used in Night mode.
+      default: 50
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+
+    night_color_temp:
+      name: Night colour temperature (K)
+      description: >
+        Colour temperature in Kelvin for Night mode.
+      default: 2200
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          step: 50
+          unit_of_measurement: K
+
+    # Optional lux based condition
+
+    use_lux_check:
+      name: Enable lux based condition
+      description: >
+        Turn this ON if you want the lights to only adjust settings when it is dark enough
+        according to a lux sensor.
+      default: false
+      selector:
+        boolean: {}
+
+    lux_sensor:
+      name: Lux sensor (optional)
+      description: >
+        Lux or illuminance sensor used for the check.
+      default: ""
+      selector:
+        entity:
+          domain: sensor
+          device_class: illuminance
+
+    lux_threshold:
+      name: Lux threshold
+      description: >
+        When lux checking is enabled, settings will only apply if the lux
+        value is BELOW this threshold.
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 2000
+          step: 1
+          unit_of_measurement: lx
+
+mode: restart
+max_exceeded: silent
+
+variables:
+  v_use_lux_check: !input use_lux_check
+  v_lux_sensor: !input lux_sensor
+  v_lux_threshold: !input lux_threshold
+  v_day_brightness: !input day_brightness
+  v_evening_brightness: !input evening_brightness
+  v_night_brightness: !input night_brightness
+
+trigger:
+  - id: light_on
+    platform: state
+    entity_id: !input target_lights
+    from: "off"
+    to: "on"
+
+  # Override trigger - sensor goes to "press" / "hold"
+  - id: override_press
+    platform: state
+    entity_id: !input override_button_sensor
+    to: !input override_button_state_value
+
+condition: []
+
+action:
+  - choose:
+
+      # 1 - Light turned on, override is off - optional lux check, then set lights according to mode
+      - conditions:
+          - condition: trigger
+            id: light_on
+          - condition: state
+            entity_id: !input override_helper
+            state: "off"
+        sequence:
+          # Optional lux condition
+          - condition: template
+            value_template: >
+              {% if not v_use_lux_check %}
+                true
+              {% elif not v_lux_sensor %}
+                true
+              {% else %}
+                {% set lux = states(v_lux_sensor) %}
+                {% if lux in ['unknown', 'unavailable', 'none', ''] %}
+                  false
+                {% else %}
+                  {{ lux | float(999999) < (v_lux_threshold | float(0)) }}
+                {% endif %}
+              {% endif %}
+
+          # Apply per mode light settings, with repeated 100% calls when brightness is 100
+          - choose:
+
+              # Day mode
+              - conditions:
+                  - condition: state
+                    entity_id: !input mode_helper
+                    state: "Day"
+                sequence:
+                  - choose:
+                      # If Day brightness is 100%, send 3 x 100% commands with 1s gap
+                      - conditions:
+                          - condition: template
+                            value_template: "{{ v_day_brightness | int == 100 }}"
+                        sequence:
+                          - repeat:
+                              count: 3
+                              sequence:
+                                - service: light.turn_on
+                                  target: !input target_lights
+                                  data:
+                                    brightness_pct: 100
+                                    color_temp_kelvin: !input day_color_temp
+                                - delay:
+                                    seconds: 1
+                    default:
+                      - service: light.turn_on
+                        target: !input target_lights
+                        data:
+                          brightness_pct: !input day_brightness
+                          color_temp_kelvin: !input day_color_temp
+
+              # Evening mode
+              - conditions:
+                  - condition: state
+                    entity_id: !input mode_helper
+                    state: "Evening"
+                sequence:
+                  - choose:
+                      - conditions:
+                          - condition: template
+                            value_template: "{{ v_evening_brightness | int == 100 }}"
+                        sequence:
+                          - repeat:
+                              count: 3
+                              sequence:
+                                - service: light.turn_on
+                                  target: !input target_lights
+                                  data:
+                                    brightness_pct: 100
+                                    color_temp_kelvin: !input evening_color_temp
+                                - delay:
+                                    seconds: 1
+                    default:
+                      - service: light.turn_on
+                        target: !input target_lights
+                        data:
+                          brightness_pct: !input evening_brightness
+                          color_temp_kelvin: !input evening_color_temp
+
+            # Night mode (default)
+            default:
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ v_night_brightness | int == 100 }}"
+                    sequence:
+                      - repeat:
+                          count: 3
+                          sequence:
+                            - service: light.turn_on
+                            target: !input target_lights
+                            data:
+                              brightness_pct: 100
+                              color_temp_kelvin: !input night_color_temp
+                            - delay:
+                                seconds: 1
+                default:
+                  - service: light.turn_on
+                    target: !input target_lights
+                    data:
+                      brightness_pct: !input night_brightness
+                      color_temp_kelvin: !input night_color_temp
+
+      # 2 - Override button pressed - set override helper to ON
+      - conditions:
+          - condition: trigger
+            id: override_press
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: !input override_helper
