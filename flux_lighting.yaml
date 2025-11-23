@@ -158,6 +158,7 @@ variables:
   v_day_brightness: !input day_brightness
   v_evening_brightness: !input evening_brightness
   v_night_brightness: !input night_brightness
+  v_mode_helper: !input mode_helper
 
 trigger:
   - id: light_on
@@ -170,6 +171,11 @@ trigger:
 condition: []
 
 action:
+  - service: logbook.log
+    data:
+      name: "Flux Lighting Blueprint"
+      message: "Triggered! Mode: {{ states(v_mode_helper) }}. Day: {{ v_day_brightness }}%, Evening: {{ v_evening_brightness }}%, Night: {{ v_night_brightness }}%"
+
   - choose:
 
       # 1 - Light turned on, override is off - optional lux check, then set lights according to mode
