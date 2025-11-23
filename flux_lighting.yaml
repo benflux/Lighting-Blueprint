@@ -217,7 +217,8 @@ action:
                               count: 3
                               sequence:
                                 - service: light.turn_on
-                                  entity_id: "{{ trigger.entity_id }}"
+                                  target:
+                                    entity_id: "{{ trigger.entity_id }}"
                                   data:
                                     brightness_pct: 100
                                     color_temp_kelvin: !input day_color_temp
@@ -225,7 +226,8 @@ action:
                                     seconds: 1
                     default:
                       - service: light.turn_on
-                        entity_id: "{{ trigger.entity_id }}"
+                        target:
+                          entity_id: "{{ trigger.entity_id }}"
                         data:
                           brightness_pct: !input day_brightness
                           color_temp_kelvin: !input day_color_temp
@@ -245,7 +247,8 @@ action:
                               count: 3
                               sequence:
                                 - service: light.turn_on
-                                  entity_id: "{{ trigger.entity_id }}"
+                                  target:
+                                    entity_id: "{{ trigger.entity_id }}"
                                   data:
                                     brightness_pct: 100
                                     color_temp_kelvin: !input evening_color_temp
@@ -253,7 +256,8 @@ action:
                                     seconds: 1
                     default:
                       - service: light.turn_on
-                        entity_id: "{{ trigger.entity_id }}"
+                        target:
+                          entity_id: "{{ trigger.entity_id }}"
                         data:
                           brightness_pct: !input evening_brightness
                           color_temp_kelvin: !input evening_color_temp
@@ -269,7 +273,8 @@ action:
                           count: 3
                           sequence:
                             - service: light.turn_on
-                              entity_id: "{{ trigger.entity_id }}"
+                              target:
+                                entity_id: "{{ trigger.entity_id }}"
                               data:
                                 brightness_pct: 100
                                 color_temp_kelvin: !input night_color_temp
@@ -277,7 +282,8 @@ action:
                                 seconds: 1
                 default:
                   - service: light.turn_on
-                    entity_id: "{{ trigger.entity_id }}"
+                    target:
+                      entity_id: "{{ trigger.entity_id }}"
                     data:
                       brightness_pct: !input night_brightness
                       color_temp_kelvin: !input night_color_temp
