@@ -163,7 +163,6 @@ trigger:
   - id: light_on
     platform: state
     entity_id: !input target_lights
-    from: "off"
     to: "on"
 
 
@@ -177,6 +176,8 @@ action:
       - conditions:
           - condition: trigger
             id: light_on
+          - condition: template
+            value_template: "{{ trigger.from_state.state != 'on' }}"
           - condition: state
             entity_id: !input override_helper
             state: "off"
