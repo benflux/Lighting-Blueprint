@@ -291,10 +291,10 @@ action:
                           count: 3
                           sequence:
                             - service: light.turn_on
-                            target: !input target_lights
-                            data:
-                              brightness_pct: 100
-                              color_temp_kelvin: !input night_color_temp
+                              target: !input target_lights
+                              data:
+                                brightness_pct: 100
+                                color_temp_kelvin: !input night_color_temp
                             - delay:
                                 seconds: 1
                 default:
