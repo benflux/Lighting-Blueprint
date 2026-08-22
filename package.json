@@ -1,0 +1,11 @@
+{
+  "name": "lighting-blueprint-tests",
+  "version": "1.0.0",
+  "description": "Tests for flux_lighting.yaml Home Assistant blueprint",
+  "scripts": {
+    "test": "node test/blueprint.test.js"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}
