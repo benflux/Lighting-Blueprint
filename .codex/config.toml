@@ -1,0 +1,9 @@
+# Project Codex sandbox: workspace-write; ask before elevated / outside-workspace.
+# Loads only when the project is trusted. Ben’s ~/.codex on Mac is out of scope.
+#:schema https://developers.openai.com/codex/config-schema.json
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[sandbox_workspace_write]
+network_access = false
