@@ -22,6 +22,10 @@ That is `node test/blueprint.test.js` (see `package.json`). The README does not 
 - YAML is a Home Assistant **automation blueprint** (`blueprint:` / `domain: automation`). Keep `!input` tags, selectors, and blueprint `input:` / `variables` / `trigger` / `action` shape.
 - This repo ships the blueprint for import. Do not turn it into live HA config, dashboards, or instance-specific entity IDs.
 
+## Worktrees / parallel work
+
+Keep parallel checkouts under `.worktrees/` (gitignored). There is no `.worktreeinclude`: this repo has no useful gitignored local env or config to copy (`node_modules/` is installed per tree with `npm install`).
+
 ## Do not
 
 - Invent lint, CI, or deploy that is not in the repo.
