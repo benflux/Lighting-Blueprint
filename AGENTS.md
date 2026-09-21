@@ -32,6 +32,10 @@ Keep parallel checkouts under `.worktrees/` (gitignored). There is no `.worktree
 - Add `.codex/config.toml` unless asked.
 - Treat this tree as a running Home Assistant install.
 
+## Codex PR review
+
+Reviewers (or Katie) can comment `@codex review` on a PR when Codex GitHub/cloud is connected. Automated review is optional: `.github/workflows/codex-review.yml` runs `openai/codex-action` on non-draft PRs when the repo secret `OPENAI_API_KEY` is set. Without that secret the job is skipped, so CI stays green. Ben adds the secret when ready.
+
 ## Done when
 
 - `flux_lighting.yaml` still parses as a blueprint.
