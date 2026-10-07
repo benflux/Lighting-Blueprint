@@ -28,7 +28,7 @@ Keep parallel checkouts under `.worktrees/` (gitignored). There is no `.worktree
 
 ## Do not
 
-- Invent lint, CI, or deploy that is not in the repo.
+- Run a live Home Assistant import/install as part of source CI. The checked-in Blueprint tests workflow runs the existing offline YAML tests; do not invent a device publisher.
 - Add `.codex/config.toml` unless asked.
 - Treat this tree as a running Home Assistant install.
 
@@ -40,3 +40,7 @@ Reviewers (or Katie) can comment `@codex review` on a PR when Codex GitHub/cloud
 
 - `flux_lighting.yaml` still parses as a blueprint.
 - `npm test` passes.
+
+## Release boundary
+
+Require Blueprint tests before source integration (branch protection adoption is separate). Source checks validate blueprint structure and fixture behavior; they do not prove a household import, entity assignment or physical lighting response. A reviewed Git source revision, the exact imported YAML digest, prior blueprint/automation backup and operator-observed HA behavior must remain separate evidence. This source PR changes no installed blueprint, controller, instance configuration or access setting.

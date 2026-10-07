@@ -16,3 +16,7 @@ This Home Assistant blueprint provides automated lighting control based on the s
 1.  Click the "Open your Home Assistant instance and show the blueprint import dialog" button above, OR copy `flux_lighting.yaml` to your Home Assistant `blueprints/automation/` directory.
 2.  Reload Automations.
 3.  Create a new automation using the "Mode-based Lighting Control" blueprint.
+
+## Source validation and installation ownership
+
+Run `npm ci --ignore-scripts` and `npm test` for the existing offline blueprint checks. The Blueprint tests workflow runs on PRs and main; required branch checks need separate owner adoption. Git source/CI success does not establish that a live Home Assistant instance imported the tested YAML. Installation needs its own authority, exact YAML digest, prior automation/blueprint backup and observed affected lighting behavior. This repository is a blueprint, not a live house configuration or a device release adapter.
