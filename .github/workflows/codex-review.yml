@@ -40,11 +40,20 @@ jobs:
     outputs:
       final_message: ${{ steps.run_codex.outputs.final-message }}
     steps:
-      - name: Check out PR merge commit
+      - name: Check out immutable PR review source
         uses: actions/checkout@v5
         with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          # The merge ref can disappear if the PR merges while this run queues.
+          # Review the exact event head; the prompt below compares its base/head.
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+
+      - name: Verify immutable review source
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$PR_HEAD_SHA"
+          printf 'Review source: %s\n' "$PR_HEAD_SHA"
 
       - name: Pre-fetch PR refs
         env:
